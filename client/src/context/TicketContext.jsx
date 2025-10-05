@@ -15,7 +15,7 @@ export const TicketProvider = ({ children }) => {
   const [nextOffset, setNextOffset] = useState(null);
 
   useEffect(() => {
-    const newSocket = io(import.meta.env.BACKEND_URI, { withCredentials: true });
+    const newSocket = io(import.meta.env.VITE_BACKEND_URI, { withCredentials: true });
 
     newSocket.on("connect", () => console.log("Connected to socket.io"));
 
