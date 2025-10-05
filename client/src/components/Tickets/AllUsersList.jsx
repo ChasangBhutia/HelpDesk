@@ -1,28 +1,33 @@
 import React, { useEffect, useState } from "react";
 import { useTicketContext } from "../../context/TicketContext";
-import TicketCard from "./TicketCard";
 
-const TicketList = ({ role, section }) => {
-  const { tickets, loading, fetchTickets, offset, nextOffset, limit } = useTicketContext();
+const AllUsersList = () => {
+  const {
+    users,
+    fetchUsers,
+    userOffset,
+    userNextOffset,
+    usersLoading,
+  } = useTicketContext();
+
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
-
   useEffect(() => {
-    fetchTickets(query, 0);
+    fetchUsers(0);
     setPage(1);
-  }, [fetchTickets, query]);
+  }, [fetchUsers]);
 
   const handleNext = () => {
-    if (nextOffset !== null) {
-      fetchTickets(query, nextOffset);
+    if (userNextOffset !== null) {
+      fetchUsers(userNextOffset);
       setPage((prev) => prev + 1);
     }
   };
 
   const handlePrev = () => {
-    const prevOffset = Math.max(offset - limit, 0);
-    fetchTickets(query, prevOffset);
+    const prevOffset = Math.max(userOffset - 10, 0);
+    fetchUsers(prevOffset);
     setPage((prev) => Math.max(prev - 1, 1));
   };
 
@@ -34,8 +39,10 @@ const TicketList = ({ role, section }) => {
       : names[0].charAt(0).toUpperCase() + names[1].charAt(0).toUpperCase();
   };
 
-
-  const filteredTickets = tickets.filter((t) => t.status !== "closed");
+  // Filter by search query
+  const filteredUsers = users.filter((user) =>
+    user.fullname.toLowerCase().includes(query.toLowerCase())
+  );
 
   return (
     <div className="p-4 max-w-full overflow-x-auto">
@@ -45,53 +52,63 @@ const TicketList = ({ role, section }) => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search tickets..."
+          placeholder="Search users..."
           className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
         />
       </div>
 
+      {/* Table */}
       <div className="bg-white rounded-xl shadow overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">S.No</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Title</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Created By</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Assignee</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Priority</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">SLA / Due</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Created At</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Name</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Email</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Role</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
+            {usersLoading ? (
               <tr>
-                <td colSpan={8} className="text-center py-6 text-gray-500">
-                  Loading tickets...
+                <td colSpan={4} className="text-center py-6 text-gray-500">
+                  Loading users...
                 </td>
               </tr>
-            ) : filteredTickets.length === 0 ? (
+            ) : filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-6 text-gray-500">
-                  No open tickets found.
+                <td colSpan={4} className="text-center py-6 text-gray-500">
+                  No users found.
                 </td>
               </tr>
             ) : (
-              filteredTickets.map((ticket, index) => {
-                if (role === "user" && ticket.createdBy?._id !== localStorage.getItem("userId"))
-                  return null;
-
-                return (
-                  <TicketCard key={ticket._id} ticket={ticket} section={section} index={index} offset={offset} getInitials={getInitials}/>
-                );
-              })
+              filteredUsers.map((user, index) => (
+                <tr key={user._id}>
+                  <td className="px-4 py-3">{userOffset + index + 1}</td>
+                  <td className="px-4 py-3 flex items-center gap-2">
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.fullname}
+                        className="w-6 h-6 rounded-full"
+                      />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-blue-400 text-white flex items-center justify-center text-xs font-semibold">
+                        {getInitials(user.fullname)}
+                      </div>
+                    )}
+                    {user.fullname}
+                  </td>
+                  <td className="px-4 py-3">{user.email}</td>
+                  <td className="px-4 py-3">user</td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
       </div>
 
-  
+      {/* Pagination */}
       <div className="flex justify-between items-center mt-4 flex-wrap gap-2">
         <button
           onClick={handlePrev}
@@ -103,7 +120,7 @@ const TicketList = ({ role, section }) => {
         <span className="text-sm text-gray-600">Page {page}</span>
         <button
           onClick={handleNext}
-          disabled={nextOffset === null}
+          disabled={userNextOffset === null}
           className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
         >
           Next
@@ -113,4 +130,4 @@ const TicketList = ({ role, section }) => {
   );
 };
 
-export default TicketList;
+export default AllUsersList;

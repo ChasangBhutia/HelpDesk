@@ -2,12 +2,9 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuthContext } from "./context/AuthContext";
 import { TicketProvider } from "./context/TicketContext";
-
-// Pages
 import AuthPage from "./pages/AuthPage";
 import Home from "./pages/Home";
 
-// ✅ Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuthContext();
 
@@ -26,23 +23,18 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// ✅ Root Routing Logic Component
+
 const AppRoutes = () => {
   const { user } = useAuthContext();
 
   return (
     <Routes>
-      {/* Root redirect */}
       <Route
         path="/"
         element={<Navigate to={"/dashboard"} replace />}
       />
-
-      {/* Auth Routes */}
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/auth/:type" element={<AuthPage />} />
-
-      {/* Protected Routes */}
       <Route
         path="/:section/:ticketId?"
         element={
@@ -52,13 +44,11 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
 
-// ✅ Main App Component
 const App = () => {
   return (
     <Router>

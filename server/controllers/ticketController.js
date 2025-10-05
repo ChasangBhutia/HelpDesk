@@ -119,39 +119,41 @@ module.exports.listTickets = async (req, res) => {
 
 
 module.exports.getTicket = async (req, res) => {
-    try {
-        const ticket = await ticketModel.findById(req.params.id)
-            .populate("createdBy", "fullname email")
-            .populate("assignedTo", "fullname email")
-            .populate("comments.user", "fullname email")
-            .lean();
+  const { id } = req.params;
 
-        if (!ticket) return res.status(404).json({
-            error: {
-                code: "NOT_FOUND",
-                field: "id",
-                message: "Ticket not found"
-            }
-        });
-        if (req.user.role === "user" && String(ticket.createdBy._id) !== String(req.user._id)) {
-            return res.status(403).json({
-                error: {
-                    code: "ACCESS_DENIED",
-                    message: "Access denied"
-                }
-            });
-        }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      error: { code: "INVALID_ID", field: "id", message: "Invalid ticket ID" },
+    });
+  }
 
-        return res.status(200).json({
-            success: true,
-            data: { ticket }
-        })
-    } catch (err) {
-        console.error("getTicket", err);
-        return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to fetch ticket" } });
+  try {
+    const ticket = await ticketModel
+      .findById(id)
+      .populate("createdBy", "fullname email")
+      .populate("assignedTo", "fullname email")
+      .populate("comments.user", "fullname email")
+      .lean();
+
+    if (!ticket)
+      return res.status(404).json({
+        error: { code: "NOT_FOUND", field: "id", message: "Ticket not found" },
+      });
+
+    if (req.user.role === "user" && String(ticket.createdBy._id) !== String(req.user._id)) {
+      return res.status(403).json({
+        error: { code: "ACCESS_DENIED", message: "Access denied" },
+      });
     }
 
-}
+    return res.status(200).json({ success: true, data: { ticket } });
+  } catch (err) {
+    console.error("getTicket", err);
+    return res.status(500).json({
+      error: { code: "INTERNAL_ERROR", message: "Failed to fetch ticket" },
+    });
+  }
+};
 
 
 module.exports.patchTicket = async (req, res) => {
@@ -308,34 +310,7 @@ module.exports.addComment = async (req, res) => {
 };
 
 
-module.exports.getAgents = async (req, res) => {
-  try {
-    const limit = Math.min(Number(req.query.limit) || 10, 100);
-    const offset = Math.max(Number(req.query.offset) || 0, 0);
 
-    console.log("Fetching agents with limit:", limit, "offset:", offset);
 
-    const agents = await userModel
-      .find({ role: "agent" })
-      .select("fullname email")
-      .skip(offset)
-      .limit(limit);
-
-    const totalAgents = await userModel.countDocuments({ role: "agent" });
-    const nextOffset = offset + agents.length >= totalAgents ? null : offset + agents.length;
-
-    return res.status(200).json({
-      success: true,
-      items: agents,
-      next_offset: nextOffset,
-      total: totalAgents
-    });
-  } catch (err) {
-    console.error("getAgents error:", err);
-    return res.status(500).json({
-      error: { code: "INTERNAL_ERROR", message: "Failed to fetch agents" }
-    });
-  }
-};
 
 

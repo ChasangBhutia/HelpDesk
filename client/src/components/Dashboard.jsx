@@ -1,21 +1,21 @@
-// src/components/Dashboard/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import { useTicketContext } from "../context/TicketContext";
 import dayjs from "dayjs";
 import { Link } from "react-router-dom";
 
 const Dashboard = ({ role }) => {
-  const { tickets, fetchTickets, loading } = useTicketContext();
+  const { tickets, fetchTickets, loading, agents, users } = useTicketContext();
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
-    inProgress:0,
+    inProgress: 0,
     resolved: 0,
     assigned: 0,
+    totalAgents: 0,
+    totalUsers: 0,
   });
 
   const userId = localStorage.getItem("userId");
-
 
   // Fetch tickets on mount
   useEffect(() => {
@@ -39,8 +39,11 @@ const Dashboard = ({ role }) => {
         ? filteredTickets.filter((t) => t.assignedTo?._id === userId).length
         : 0;
 
-    setStats({ total, open,inProgress, resolved, assigned });
-  }, [tickets, role, userId]);
+    const totalAgents = agents.length;
+    const totalUsers = users.length;
+
+    setStats({ total, open, inProgress, resolved, assigned, totalAgents, totalUsers });
+  }, [tickets, role, userId, agents, users]);
 
   return (
     <div className="p-6 space-y-6">
@@ -67,6 +70,18 @@ const Dashboard = ({ role }) => {
             <h3 className="text-gray-500 text-sm">Tickets Assigned</h3>
             <p className="text-2xl font-semibold">{stats.assigned}</p>
           </div>
+        )}
+        {role === "admin" && (
+          <>
+            <div className="bg-white p-4 rounded-xl shadow">
+              <h3 className="text-gray-500 text-sm">Total Agents</h3>
+              <p className="text-2xl font-semibold">{stats.totalAgents}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl shadow">
+              <h3 className="text-gray-500 text-sm">Total Users</h3>
+              <p className="text-2xl font-semibold">{stats.totalUsers}</p>
+            </div>
+          </>
         )}
       </div>
 
@@ -103,7 +118,7 @@ const Dashboard = ({ role }) => {
                   if (role === "agent") return ticket.assignedTo?._id === userId;
                   return true;
                 })
-                .slice(0, 5) // show top 5 recent tickets
+                .slice(0, 5)
                 .map((ticket, idx) => (
                   <tr key={ticket._id} className="hover:bg-gray-50 transition">
                     <td className="px-4 py-2 text-sm text-gray-700">{idx + 1}</td>

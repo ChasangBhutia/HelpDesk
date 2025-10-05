@@ -1,13 +1,12 @@
-// src/components/Tickets/AgentTicketList.jsx
 import React, { useEffect, useState } from "react";
 import { useTicketContext } from "../../context/TicketContext";
 import TicketCard from "./TicketCard"
 
-const AgentTicketList = () => {
+const AgentTicketList = ({section}) => {
   const { tickets, loading, fetchTickets, offset, nextOffset, limit } = useTicketContext();
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
-  const agentId = localStorage.getItem("userId"); // logged-in agent ID
+  const agentId = localStorage.getItem("userId");
 
   useEffect(() => {
     fetchTickets(query, 0);

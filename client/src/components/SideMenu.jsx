@@ -1,5 +1,5 @@
 import React from 'react'
-import { LayoutDashboard, Ticket, Plus } from 'lucide-react';
+import { LayoutDashboard, Ticket, Plus, User, HatGlasses, TicketCheck, TicketSlash } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 
@@ -10,7 +10,6 @@ const SideMenu = () => {
         logout();
     };
 
-    // Get initials from user's name
     const getInitials = (name) => {
         if (!name) return "U";
         const names = name.split(" ");
@@ -19,7 +18,6 @@ const SideMenu = () => {
             : names[0].charAt(0).toUpperCase() + names[1].charAt(0).toUpperCase();
     };
 
-    // Badge color based on role
     const roleColor = {
         admin: 'bg-red-500',
         agent: 'bg-blue-500',
@@ -73,22 +71,41 @@ const SideMenu = () => {
                     {user.role === 'agent' && (
                         <Link to="/assigned-tickets">
                             <li className='rounded-xl hover:bg-blue-500 hover:text-white pl-3 hover:pl-6 duration-300 py-3 flex gap-3 cursor-pointer'>
-                                <Ticket />
+                                <TicketSlash />
                                 <p className='poppins'>Assigned Tickets</p>
                             </li>
                         </Link>
                     )}
 
+                    {user.role === 'admin' && (
+                        <Link to="/all-agents">
+                            <li className='rounded-xl hover:bg-blue-500 hover:text-white pl-3 hover:pl-6 duration-300 py-3 flex gap-3 cursor-pointer'>
+                                <HatGlasses />
+                                <p className='poppins'>All Agents</p>
+                            </li>
+                        </Link>
+                    )}
+
+                    {user.role === 'admin' && (
+                        <Link to="/all-users">
+                            <li className='rounded-xl hover:bg-blue-500 hover:text-white pl-3 hover:pl-6 duration-300 py-3 flex gap-3 cursor-pointer'>
+                                <User />
+                                <p className='poppins'>All Users</p>
+                            </li>
+                        </Link>
+                    )}
+
+
                     <Link to="/resolved-tickets">
                         <li className='rounded-xl hover:bg-blue-500 hover:text-white pl-3 hover:pl-6 duration-300 py-3 flex gap-3 cursor-pointer'>
-                            <Ticket />
+                            <TicketCheck />
                             <p className='poppins'>Resolved Tickets</p>
                         </li>
                     </Link>
                 </ul>
             </div>
 
-            {/* Profile section */}
+
             <div className='mt-auto border-t-2 border-zinc-300'>
                 <div className='w-full p-2 rounded-bl-xl flex flex-col items-center justify-between'>
                     <div className='flex gap-2 items-center'>

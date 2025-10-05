@@ -1,4 +1,3 @@
-// src/components/Tickets/ResolvedTicketList.jsx
 import React, { useEffect, useState } from "react";
 import { useTicketContext } from "../../context/TicketContext";
 import TicketCard from "./TicketCard";

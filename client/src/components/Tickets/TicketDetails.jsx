@@ -6,34 +6,45 @@ import dayjs from "dayjs";
 
 const TicketDetails = ({ id }) => {
   const navigate = useNavigate();
-  const { tickets, fetchTickets, loading, updateTicket, addComment, fetchAgents } = useTicketContext();
+  const {
+    agents,
+    tickets,
+    fetchTickets,
+    loading,
+    updateTicket,
+    addComment,
+    fetchAgents,
+  } = useTicketContext();
   const { user } = useAuthContext();
 
   const [ticket, setTicket] = useState(null);
-  const [agents, setAgents] = useState([]);
   const [commentText, setCommentText] = useState("");
 
+  // Fetch tickets and agents on mount / id change
+  useEffect(() => {
+    // Fetch tickets if not already loaded
+    if (!ticket) {
+      fetchTickets(""); // fetchTickets updates context tickets
+    }
+
+    // Fetch agents if admin
+    if (user.role === "admin") {
+      fetchAgents(); // fetchAgents updates context agents
+    }
+  }, [id, ticket, fetchTickets, fetchAgents, user.role]);
+
+  // Update local ticket state whenever tickets in context change
   useEffect(() => {
     const updatedTicket = tickets.find((t) => t._id === id);
     if (updatedTicket) setTicket(updatedTicket);
   }, [tickets, id]);
 
-  // Initial fetch
-  useEffect(() => {
-    if (!ticket) {
-      fetchTickets("").then(() => {
-        const t = tickets.find((t) => t._id === id);
-        setTicket(t);
-      });
-    }
-
-    if (user.role === "admin") {
-      fetchAgents().then(setAgents);
-    }
-  }, [id, tickets, ticket, fetchTickets, user.role, fetchAgents]);
-
   if (loading || !ticket) {
-    return <div className="p-6 text-center text-gray-500">Loading ticket details...</div>;
+    return (
+      <div className="p-6 text-center text-gray-500">
+        Loading ticket details...
+      </div>
+    );
   }
 
   const getInitials = (name) => {
@@ -139,11 +150,15 @@ const TicketDetails = ({ id }) => {
               onChange={(e) => handleAssign(e.target.value)}
             >
               <option value="">Select Agent</option>
-              {agents.map((agent) => (
-                <option key={agent._id} value={agent._id}>
-                  {agent.fullname}
-                </option>
-              ))}
+              {agents.length === 0 ? (
+                <option disabled>Loading agents...</option>
+              ) : (
+                agents.map((agent) => (
+                  <option key={agent._id} value={agent._id}>
+                    {agent.fullname}
+                  </option>
+                ))
+              )}
             </select>
           </div>
         )}
@@ -180,7 +195,10 @@ const TicketDetails = ({ id }) => {
           ) : (
             <ul className="space-y-2 max-h-64 overflow-auto">
               {ticket.comments.map((comment) => (
-                <li key={comment._id} className="p-3 border rounded-lg bg-gray-50">
+                <li
+                  key={comment._id}
+                  className="p-3 border rounded-lg bg-gray-50"
+                >
                   <div className="flex items-center gap-2 mb-1">
                     {comment.user?.avatar ? (
                       <img

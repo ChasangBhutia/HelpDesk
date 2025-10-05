@@ -58,7 +58,6 @@ export const TicketProvider = ({ children }) => {
     }
   }, [limit]);
 
-
   const createTicket = async (ticketData) => {
     const key = uuidv4();
     try {
@@ -125,11 +124,10 @@ export const TicketProvider = ({ children }) => {
   const [agentNextOffset, setAgentNextOffset] = useState(null);
   const [agentsLoading, setAgentsLoading] = useState(false);
 
-
   const fetchAgents = useCallback(async (newOffset = 0) => {
     setAgentsLoading(true);
     try {
-      const res = await api.get(`/tickets/agents?limit=${agentLimit}&offset=${newOffset}`, {
+      const res = await api.get(`/auth/agents?limit=${agentLimit}&offset=${newOffset}`, {
         withCredentials: true
       });
       if (newOffset === 0) {
@@ -146,12 +144,39 @@ export const TicketProvider = ({ children }) => {
     }
   }, [agentLimit]);
 
-
   const fetchNextAgentPage = () => {
     if (agentNextOffset !== null) fetchAgents(agentNextOffset);
   };
 
+  const [users, setUsers] = useState([]);
+  const [userOffset, setUserOffset] = useState(0);
+  const [userLimit] = useState(10);
+  const [userNextOffset, setUserNextOffset] = useState(null);
+  const [usersLoading, setUsersLoading] = useState(false);
 
+  const fetchUsers = useCallback(async (newOffset = 0) => {
+    setUsersLoading(true);
+    try {
+      const res = await api.get(`/auth/users?limit=${userLimit}&offset=${newOffset}`, {
+        withCredentials: true
+      });
+      if (newOffset === 0) {
+        setUsers(res.data.items);
+      } else {
+        setUsers((prev) => [...prev, ...res.data.items]);
+      }
+      setUserOffset(newOffset);
+      setUserNextOffset(res.data.next_offset);
+    } catch (err) {
+      console.error("Failed to fetch users", err);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [userLimit]);
+
+  const fetchNextUserPage = () => {
+    if (userNextOffset !== null) fetchUsers(userNextOffset);
+  };
 
   return (
     <TicketContext.Provider
@@ -167,9 +192,17 @@ export const TicketProvider = ({ children }) => {
         nextOffset,
         limit,
         agents,
+        setAgents,
         fetchAgents,
         fetchNextAgentPage,
-        agentsLoading
+        agentsLoading,
+        agentOffset,
+        users,
+        setUsers,
+        fetchUsers,
+        fetchNextUserPage,
+        usersLoading,
+        userOffset
       }}
     >
       {children}

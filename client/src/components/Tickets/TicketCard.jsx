@@ -3,7 +3,7 @@ import dayjs from 'dayjs'
 import { Link } from 'react-router-dom'
 
 const TicketCard = ({ getInitials, ticket, index, offset, section }) => {
-  // Function to get status badge classes
+
   const getStatusClasses = (status) => {
     switch (status) {
       case "open":

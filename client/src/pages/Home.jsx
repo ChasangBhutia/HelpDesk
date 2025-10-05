@@ -9,12 +9,15 @@ import ResolvedTicketList from '../components/Tickets/ResolvedTicketList'
 import TicketDetails from '../components/Tickets/TicketDetails'
 import Dashboard from '../components/Dashboard'
 import { useAuthContext } from '../context/AuthContext'
+import AllAgentsList from '../components/Tickets/AllAgentsList'
+import AllUsersList from '../components/Tickets/AllUsersList'
 
 const Home = () => {
 
     const { section, ticketId } = useParams();
 
     const { user } = useAuthContext();
+
 
     return (
         <div className='w-full bg-gray-200 h-screen flex items-center justify-center'>
@@ -26,7 +29,7 @@ const Home = () => {
 
                 {/* Navbar */}
                 <header >
-                    <Navbar section={section}/>
+                    <Navbar section={section} />
                 </header>
 
                 {/* Main Content */}
@@ -38,8 +41,10 @@ const Home = () => {
                             {section === 'dashboard' && <Dashboard role={user.role} />}
                             {section === 'ticket-lists' && <TicketList section={section} />}
                             {section === 'add-ticket' && <AddTicket />}
-                            {section === 'assigned-tickets' && <AgentTicketList />}
+                            {section === 'assigned-tickets' && <AgentTicketList section={section}/>}
                             {section === 'resolved-tickets' && <ResolvedTicketList />}
+                            {(section === 'all-agents' && user.role === 'admin') && <AllAgentsList/>}
+                            {(section === 'all-users' && user.role === 'admin') && <AllUsersList/>}
                         </>
                     )}
 

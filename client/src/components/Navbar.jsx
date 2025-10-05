@@ -5,13 +5,13 @@ const Navbar = ({section}) => {
 
   const date = new Date();
 
-  const month = date.toLocaleString('default', { month: 'long' }); // e.g., "September"
-  const weekday = date.toLocaleString('default', { weekday: 'long' }); // e.g., "Friday"
-  const day = date.getDate(); // e.g., 14
+  const month = date.toLocaleString('default', { month: 'long' }); 
+  const weekday = date.toLocaleString('default', { weekday: 'long' });
+  const day = date.getDate(); 
 
-  const fullDate = date.toISOString().split('T')[0]; // e.g., "2025-09-14"
-  const monthDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // "2025-09"
-  const weekdayDate = fullDate; // Same as fullDate for simplicity
+  const fullDate = date.toISOString().split('T')[0];
+  const monthDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  const weekdayDate = fullDate; 
 
   return (
     <nav className="w-full bg-white border-b-3 border-gray-200 text-black h-full flex items-center justify-between px-5 rounded-tr-xl">

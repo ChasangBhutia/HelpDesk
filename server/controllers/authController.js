@@ -6,6 +6,62 @@ const generateToken = require('../utils/generateToken');
 const jwt = require("jsonwebtoken");
 
 
+module.exports.getAgents = async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 10, 100);
+    const offset = Math.max(Number(req.query.offset) || 0, 0);
+
+    const agents = await userModel
+      .find({ role: "agent" })
+      .select("fullname email specialties")
+      .skip(offset)
+      .limit(limit);
+
+    const totalAgents = await userModel.countDocuments({ role: "agent" });
+    const nextOffset = offset + agents.length >= totalAgents ? null : offset + agents.length;
+
+    return res.status(200).json({
+      success: true,
+      items: agents,
+      next_offset: nextOffset,
+      total: totalAgents
+    });
+  } catch (err) {
+    console.error("getAgents error:", err);
+    return res.status(500).json({
+      error: { code: "INTERNAL_ERROR", message: "Failed to fetch agents" }
+    });
+  }
+};
+
+module.exports.getUsers = async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 10, 100);
+    const offset = Math.max(Number(req.query.offset) || 0, 0);
+
+    const users = await userModel
+      .find({ role: "user" })
+      .select("fullname email")
+      .skip(offset)
+      .limit(limit);
+
+    const totalUsers = await userModel.countDocuments({ role: "user" });
+    const nextOffset = offset + users.length >= totalUsers ? null : offset + users.length;
+
+    return res.status(200).json({
+      success: true,
+      items: users,
+      next_offset: nextOffset,
+      total: totalUsers
+    });
+  } catch (err) {
+    console.error("getUsers error:", err);
+    return res.status(500).json({
+      error: { code: "INTERNAL_ERROR", message: "Failed to fetch users" }
+    });
+  }
+};
+
 module.exports.getMe = async (req, res) => {
     try {
         // 1. Get token from cookies
