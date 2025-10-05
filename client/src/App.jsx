@@ -35,7 +35,7 @@ const AppRoutes = () => {
       {/* Root redirect */}
       <Route
         path="/"
-        element={<Navigate to={user ? "/dashboard" : "/auth"} replace />}
+        element={<Navigate to={"/dashboard"} replace />}
       />
 
       {/* Auth Routes */}
