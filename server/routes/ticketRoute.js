@@ -1,5 +1,5 @@
 const express = require('express');
-const { createTicket, listTickets, getTicket, patchTicket, addComment } = require('../controllers/ticketController');
+const { createTicket, listTickets, getTicket, patchTicket, addComment, getAgents } = require('../controllers/ticketController');
 const { allowRoles } = require('../middleware/roleMiddleware');
 const router = express.Router();
 
@@ -8,5 +8,6 @@ router.get("/", listTickets);
 router.get("/:id", getTicket);
 router.patch("/:id", allowRoles("agent", "admin"), patchTicket);
 router.post("/:id/comments", allowRoles("user", "agent", "admin"), addComment);
+router.get("/agents", allowRoles("admin"), getAgents);
 
 module.exports = router;

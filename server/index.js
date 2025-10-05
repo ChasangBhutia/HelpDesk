@@ -30,12 +30,15 @@ startSlaChecker(io);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
 app.use(cookieParser());
 app.set("io", io);
 
-app.use('/api/auth/', authRoute);
-app.use('/api/tickets/', isLoggedIn, rateLimit, ticketRoute);
+app.use('/api/auth', authRoute);
+app.use('/api/tickets', isLoggedIn, rateLimit, ticketRoute);
 
 server.listen(PORT, () => {
     console.log(`Server is live on PORT: ${PORT}`)

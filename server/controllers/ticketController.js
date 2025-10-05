@@ -5,12 +5,12 @@ const userModel = require('../models/userModel');
 
 function buildSearchFilter(q) {
     if (!q) return {};
-    const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"); // escape & case-insensitive
+    const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"); 
     return {
         $or: [
             { title: regex },
             { description: regex },
-            { "comments.message": regex } // will match any comment message
+            { "comments.message": regex } 
         ]
     };
 }
@@ -82,8 +82,6 @@ module.exports.createTicket = async (req, res) => {
     }
 }
 
-// GET /api/tickets?limit=&offset=&q=&breached=true
-// GET /api/tickets?limit=&offset=&q=&breached=true
 module.exports.listTickets = async (req, res) => {
     try {
         const limit = Math.min(parseInt(req.query.limit || "20", 10), 100);
@@ -93,20 +91,19 @@ module.exports.listTickets = async (req, res) => {
 
         const filter = buildSearchFilter(q);
 
-        // role filter: users see only their tickets
         if (req.user.role === "user") filter.createdBy = req.user._id;
 
         if (breachedFilter) {
             filter.slaBreached = true;
         }
 
-        // find tickets
+        
         let items = await ticketModel.find(filter)
             .populate("createdBy", "fullname email")
             .populate("assignedTo", "fullname email")
             .sort({
-                slaBreached: -1, // breached tickets come first
-                createdAt: -1    // latest tickets on top
+                slaBreached: -1, 
+                createdAt: -1    
             })
             .skip(offset)
             .limit(limit);
@@ -156,44 +153,39 @@ module.exports.getTicket = async (req, res) => {
 
 }
 
-// PATCH /api/tickets/:id
-// optimistic locking required: client must send If-Match header with the current __v
 
 module.exports.patchTicket = async (req, res) => {
     const io = req.app.get("io");
     const ticketId = req.params.id;
-    const patch = req.body; // allowed fields: status, assignedTo, priority, slaHours
+    const patch = req.body; 
     const ifMatch = req.headers["if-match"];
 
-    // 1. If-Match header required
     if (!ifMatch) {
         return res.status(400).json({ error: { code: "IF_MATCH_REQUIRED", field: "if-match", message: "If-Match header (ticket version) required" } });
     }
 
-    // 2. Parse expected version
     const expectedVersion = parseInt(ifMatch, 10);
     if (Number.isNaN(expectedVersion)) {
         return res.status(400).json({ error: { code: "INVALID_IF_MATCH", field: "if-match", message: "Invalid If-Match header" } });
     }
 
     try {
-        // 3. Load current ticket
         const ticket = await ticketModel.findById(ticketId);
         if (!ticket) {
             return res.status(404).json({ error: { code: "NOT_FOUND", message: "Ticket not found" } });
         }
 
-        // 4. Optimistic locking check
+        
         if (ticket.__v !== expectedVersion) {
             return res.status(409).json({ error: { code: "STALE_PATCH", message: "Resource version mismatch" } });
         }
 
-        // 5. Role-based enforcement
+        
         if (patch.assignedTo && !["agent", "admin"].includes(req.user.role)) {
             return res.status(403).json({ error: { code: "FORBIDDEN", field: "assignedTo", message: "Only agents/admins can assign tickets" } });
         }
 
-        // 6. Apply changes and log them
+        
         const changes = {};
 
         if (patch.status && patch.status !== ticket.status) {
@@ -224,24 +216,19 @@ module.exports.patchTicket = async (req, res) => {
         if (patch.slaHours && patch.slaHours !== ticket.slaHours) {
             changes.slaHours = { from: ticket.slaHours, to: patch.slaHours };
             ticket.slaHours = patch.slaHours;
-            // slaDeadline will be recalculated in pre('save') if you implemented it
+        
         }
 
-        // 7. No changes provided
         if (Object.keys(changes).length === 0) {
             return res.status(400).json({ error: { code: "NO_CHANGES", message: "No updatable fields provided" } });
         }
 
-        // 8. Push timeline entry
         ticket.timeline.push({ action: "updated", by: req.user._id, meta: changes });
-
-        // 9. Save ticket (increments __v)
         await ticket.save();
 
-        // 10. Emit real-time event
         if (io) io.emit("ticket:updated", ticket);
 
-        // 11. Return success response
+
         return res.status(200).json({ success: true, message: "Ticket updated", data: { ticket } });
 
     } catch (err) {
@@ -251,13 +238,11 @@ module.exports.patchTicket = async (req, res) => {
 };
 
 
-// POST /api/tickets/:id/comments
 module.exports.addComment = async (req, res) => {
     const io = req.app.get("io");
     const ticketId = req.params.id;
     const { message } = req.body;
 
-    // Validate input
     if (!message) {
         return res.status(400).json({
             error: {
@@ -269,7 +254,7 @@ module.exports.addComment = async (req, res) => {
     }
 
     try {
-        // Find the ticket
+
         const ticket = await ticketModel.findById(ticketId);
         if (!ticket) {
             return res.status(404).json({
@@ -281,7 +266,6 @@ module.exports.addComment = async (req, res) => {
             });
         }
 
-        // Permission check: users can only comment on their own tickets; agents/admins can comment on any
         if (req.user.role === "user" && String(ticket.createdBy) !== String(req.user._id)) {
             return res.status(403).json({
                 error: {
@@ -292,10 +276,8 @@ module.exports.addComment = async (req, res) => {
             });
         }
 
-        // Add the comment
         ticket.comments.push({ user: req.user._id, message });
 
-        // Log to timeline
         ticket.timeline.push({
             action: "comment_added",
             by: req.user._id,
@@ -306,7 +288,6 @@ module.exports.addComment = async (req, res) => {
 
         const comment = ticket.comments[ticket.comments.length - 1];
 
-        // Emit real-time event
         if (io) io.emit("ticket:comment", { ticketId: ticket._id, comment });
 
         return res.status(201).json({
@@ -325,3 +306,36 @@ module.exports.addComment = async (req, res) => {
         });
     }
 };
+
+
+module.exports.getAgents = async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 10, 100);
+    const offset = Math.max(Number(req.query.offset) || 0, 0);
+
+    console.log("Fetching agents with limit:", limit, "offset:", offset);
+
+    const agents = await userModel
+      .find({ role: "agent" })
+      .select("fullname email")
+      .skip(offset)
+      .limit(limit);
+
+    const totalAgents = await userModel.countDocuments({ role: "agent" });
+    const nextOffset = offset + agents.length >= totalAgents ? null : offset + agents.length;
+
+    return res.status(200).json({
+      success: true,
+      items: agents,
+      next_offset: nextOffset,
+      total: totalAgents
+    });
+  } catch (err) {
+    console.error("getAgents error:", err);
+    return res.status(500).json({
+      error: { code: "INTERNAL_ERROR", message: "Failed to fetch agents" }
+    });
+  }
+};
+
+
