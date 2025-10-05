@@ -20,7 +20,7 @@ const server = http.createServer(app);
 
 const isProd = process.env.NODE_ENV === 'production';
 const CLIENT_URL = isProd
-  ? process.env.CLIENT_URL || 'https://yourfrontenddomain.com'  
+  ? process.env.CLIENT_URL || 'https://help-desk-97kgh9i2d-chasang-tserinh-bhutias-projects.vercel.app/'  
   : process.env.CLIENT_URL || 'http://localhost:5173';
 
 const io = new Server(server, {
