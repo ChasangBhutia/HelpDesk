@@ -41,6 +41,7 @@ app.use(cors({
     "Authorization",
     "idempotency-key",
     "Accept",
+    "if-match",
     "Origin",
     "X-Requested-With",
     "Access-Control-Request-Method",
